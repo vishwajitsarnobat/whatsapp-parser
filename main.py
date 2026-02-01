@@ -8,6 +8,7 @@ from selenium.webdriver.support import expected_conditions as EC
 home_path = "/home/vishwajitsarnobat"
 original_profile_name = "Default"
 chat_names = ["Hiring Alert(2nd Batch)", "Job / Intern Openings", "Batch(27/28/29) hiring"]
+# chat_names = ["Vishwajit Sarnobat"]
 
 session = SeleniumSession(home_path, original_profile_name)
 driver = session.start()
@@ -17,7 +18,7 @@ driver.get("https://web.whatsapp.com")
 print("Waiting for WhatsApp to load (Please scan QR code if needed)...")
 wait = WebDriverWait(driver, 60) #login only
 try:
-    search_box_xpath = '//div[@contenteditable="true"][@aria-label="Search input textbox"]' # or try [@data-tab="3"]
+    search_box_xpath = '//div[@contenteditable="true"][@data-tab="3"]' # or try [@aria-label="Search input textbox"]
     wait.until(EC.presence_of_element_located((By.XPATH, search_box_xpath)))
     print("WhatsApp loaded successfully.")
 except:
@@ -28,6 +29,13 @@ except:
 for chat_name in chat_names:  
     chat = ProcessChat(driver, chat_name)
     messages = chat.process_chat()
+    print(f"Received a total of {len(messages)} messages.")
+    for msg in messages:
+        print(msg)
+    # messages will have unique new messages
+    # for message in messages:
+    #     llm = ProcessLLM(message)
+        
 
 # just to clean UI
 try:

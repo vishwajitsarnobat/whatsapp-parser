@@ -11,7 +11,7 @@ class BSParser:
 
     def parse_messages(self):
         if self.outgoing:
-            incoming_bubbles = self.soup.select('div.message-in', 'div.message-out')
+            incoming_bubbles = self.soup.select('div.message-in, div.message-out')
         else:
             incoming_bubbles = self.soup.select('div.message-in') # alternative: find_all
 
@@ -28,14 +28,17 @@ class BSParser:
             if time_sender_element:
                 time_sender = time_sender_element['data-pre-plain-text']
                 pattern_match = re.search(r"\[(.*?)\]\s(.*?):", time_sender)
-                message_data["time"] = pattern_match.group(1)
-                message_data["sender"] = pattern_match.group(2)
+                if pattern_match:
+                    message_data["time"] = pattern_match.group(1)
+                    message_data["sender"] = pattern_match.group(2)
+                else:
+                    print("Regex failed for:", time_sender)
             else:
                 print("Time and pattern matching failed.")
             
             text_element = bubble.select_one('span[data-testid="selectable-text"]')
             if text_element:
-                message_data["text"] = text_element.get_text()
+                message_data["text"] = text_element.get_text(separator="\n").strip()
                 link_elements = text_element.find_all('a')
                 for link_element in link_elements:
                     link = link_element.get("href")
@@ -46,7 +49,7 @@ class BSParser:
             else:
                 print("No text found in this message.")
 
-            if message_data['text']:
+            if message_data["text"]:
                 self.extracted_messages.append(message_data)
         
         return self.extracted_messages
