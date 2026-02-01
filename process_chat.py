@@ -34,6 +34,21 @@ class ProcessChat:
                 print(f"Warning: chat '{self.chat_name}' not found in search results.")
                 return None
             time.sleep(2) 
+
+            # scroll test
+            try:
+                scroll_xpath = '//div[@data-scrolltracepolicy="wa.web.conversation.messages"]'
+                scroll_element = self.wait.until(EC.element_to_be_clickable((By.XPATH, scroll_xpath)))
+                scroll_element.click()
+                for i in range(3):
+                    scroll_element.send_keys(Keys.PAGE_UP)
+                    time.sleep(2)
+                scroll_element.send_keys(Keys.PAGE_DOWN)
+            except Exception as e:
+                print(e)
+                print("Scrolling failed.")
+            return
+
             # scrolling will be implemented here
             bsparser = BSParser(self.driver.page_source, outgoing=False)
             messages = bsparser.parse_messages()

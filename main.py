@@ -28,7 +28,6 @@ except:
 for chat_name in chat_names:  
     chat = ProcessChat(driver, chat_name)
     messages = chat.process_chat()
-    print(messages)
 
 # just to clean UI
 try:
