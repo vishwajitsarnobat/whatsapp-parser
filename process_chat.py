@@ -19,6 +19,8 @@ class ProcessChat:
         self.chat_name = chat_name
         self.wait = WebDriverWait(self.driver, 10) #enough for interactions
         self.search_box_xpath = '//div[@contenteditable="true"][@data-tab="3"]' # or try [@aria-label="Search input textbox"]
+        self.search_box = self.wait.until(EC.element_to_be_clickable((By.XPATH, self.search_box_xpath)))
+        
         self.safe_name = "".join(c for c in self.chat_name if c.isalnum() or c in ('_')).strip()
         print("Safe name: ", self.safe_name)
         
@@ -95,15 +97,14 @@ class ProcessChat:
 
     def process_chat(self):
         try:
-            search_box = self.wait.until(EC.element_to_be_clickable((By.XPATH, self.search_box_xpath)))
-            search_box.click()
+            self.search_box.click()
             # more robust than clear
-            search_box.send_keys(Keys.CONTROL + "a")
-            search_box.send_keys(Keys.BACKSPACE)
+            self.search_box.send_keys(Keys.CONTROL + "a")
+            self.search_box.send_keys(Keys.BACKSPACE)
             time.sleep(1)
             
             print(f"Searching for {self.chat_name}...")
-            search_box.send_keys(self.chat_name)
+            self.search_box.send_keys(self.chat_name)
             time.sleep(1)
 
             chat_xpath = f'//span[@title="{self.chat_name}"]'
@@ -144,9 +145,9 @@ class ProcessChat:
                     break
 
                 try:
+                    # scroll_element.click()
                     scroll_xpath = '//div[@data-scrolltracepolicy="wa.web.conversation.messages"]'
                     scroll_element = self.wait.until(EC.presence_of_element_located((By.XPATH, scroll_xpath)))
-                    # scroll_element.click()
                     scroll_element.send_keys(Keys.PAGE_UP)
                     time.sleep(5) #time to scroll and load
                 except ElementClickInterceptedException:
