@@ -22,11 +22,11 @@ try:
     wait.until(EC.presence_of_element_located((By.XPATH, search_box_xpath)))
     print("WhatsApp loaded successfully.")
 except:
-    print("Timed out waiting for WhatsApp to load.")
+    print("Timed out waiting for WhatsApp to load. Check your internet connection.")
     session.stop()
     exit()
 
-for chat_name in chat_names:  
+for chat_name in chat_names:
     chat = ProcessChat(driver, chat_name)
     messages = chat.process_chat()
     print(f"Received a total of {len(messages)} messages.")
