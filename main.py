@@ -10,6 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 home_path = "/home/vishwajitsarnobat"
 original_profile_name = "Default"
 chat_names = ["Hiring Alert(2nd Batch)", "Job / Intern Openings", "Batch(27/28/29) hiring"]
+# chat_names = ["Batch(27/28/29) hiring"]
 search_box_xpath = '//div[@contenteditable="true"][@data-tab="3"]' # or try [@aria-label="Search input textbox"]
 
 session = SeleniumSession(home_path, original_profile_name)
@@ -39,7 +40,7 @@ for chat_name in chat_names:
     for msg in messages:
         llm = ProcessLLM(driver, msg)
         response = llm.process()
-        if response == "Not relevant":
+        if not response:
             print("Message was not relevant, hence not sent.")
         else:
             push_msgs = PushMsg(driver, response)

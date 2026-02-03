@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import requests
 import json
+import time
 import os
 
 class ProcessLLM:
@@ -58,7 +59,6 @@ class ProcessLLM:
             clean_text = ' '.join(chunk for chunk in lines if chunk)
 
             print(f"Text length: {len(clean_text)}")
-            # print(f"Text: {clean_text}")
             
         except Exception as e:
             print(f"Failed to scrape {url}: {e}")
@@ -70,64 +70,52 @@ class ProcessLLM:
             print("Returned to original Whatsapp tab.")
         return clean_text
 
-    def is_relevant(self) -> str:
-        try:
-            final_prompt = self.relevance_prompt.format(message_content=self.message_text) #replace placeholder message_content
-            response = self.client.models.generate_content(
-                model = self.model,
-                contents = final_prompt
-            )
-            return response.text.strip()
-        except Exception as e:
-            print(f"Error checking relevance: {e}")
-            return "No"
-
     def process(self):
-        relevance_verdict = self.is_relevant()
+        full_context = f"WHATSAPP MESSAGE:\n{self.message_text}\n\n"
         
-        if "yes" in relevance_verdict.lower():
-            full_context = f"WHATSAPP MESSAGE:\n{self.message_text}\n\n"
-            
-            if self.links:
-                print(f"Found {len(self.links)} links. Scraping content for better context...")
-                for link in self.links:
-                    scraped_content = self.scrape_link(link)
-                    if scraped_content:
-                        full_context += f"SCRAPED CONTENT FROM {link}:\n{scraped_content}\n\n"
-            
-            job_extraction_schema = {
-                'type': 'array',
-                'items': {
-                    'type': 'object',
-                    'properties': {
-                        'links': {
-                            'type': 'array', 
-                            'items': {'type': 'string'},
-                            'description': 'List of application URLs found'
-                        },
-                        'role_title': {'type': 'string'},
-                        'is_remote': {'type': 'boolean'},
-                        'is_paid': {'type': 'boolean'},
-                        'match_reason': {'type': 'string'}
-                    },
-                    'required': ['links', 'role_title', 'is_remote', 'is_paid', 'match_reason']
-                }
-            }
+        if self.links:
+            print(f"Found {len(self.links)} links. Scraping content...")
+            for link in self.links:
+                scraped_content = self.scrape_link(link)
+                if scraped_content:
+                    full_context += f"SCRAPED CONTENT FROM {link}:\n{scraped_content}\n\n"
 
-            try:
-                final_prompt = self.process_prompt.format(message_content=full_context)
-                response = self.client.models.generate_content(
-                    model=self.model,
-                    contents=final_prompt,
-                    config={
-                        'response_mime_type': 'application/json',
-                        'response_schema': job_extraction_schema
-                    }
-                )
-                return json.loads(response.text) #expected type: list of dictionaries
-                
-            except Exception as e:
-                print(f"Error processing details: {e}")
-                return []
-        else:
-            return "Not relevant"
+        job_extraction_schema = {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'links': {'type': 'array', 'items': {'type': 'string'}},
+                    'role_title': {'type': 'string'},
+                    'is_remote': {'type': 'boolean'},
+                    'is_paid': {'type': 'boolean'},
+                    'match_reason': {'type': 'string'}
+                },
+                'required': ['links', 'role_title', 'is_remote', 'is_paid', 'match_reason']
+            }
+        }
+
+        try:
+            # Free tier is approx 15 Requests Per Minute (1 req every 4 seconds)
+            time.sleep(4) 
+            
+            final_prompt = self.process_prompt.format(message_content=full_context)
+            
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=final_prompt,
+                config={
+                    'response_mime_type': 'application/json',
+                    'response_schema': job_extraction_schema
+                }
+            )
+            
+            return json.loads(response.text)
+            
+        except Exception as e:
+            if "429" in str(e):
+                print("Rate Limit Hit! Sleeping for 60 seconds...")
+                time.sleep(60)
+                return self.process()
+            print(f"Error processing details: {e}")
+            return []

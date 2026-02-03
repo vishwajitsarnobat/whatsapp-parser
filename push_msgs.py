@@ -16,7 +16,7 @@ class PushMsg:
         self.my_chat_name = "Vishwajit Sarnobat" 
         self.sent_jobs_file = "sent_jobs.json"
 
-    def format_message(self, job_dict): # for whatsapp msg
+    def format_message(self, job_dict):
         return (
             f"*Role:* {job_dict.get('role_title', 'N/A')}\n"
             f"*Remote:* {'Yes' if job_dict.get('is_remote') else 'No'}\n"
@@ -27,13 +27,13 @@ class PushMsg:
 
     def save_to_json(self, sent_data):
         existing_data = []
-        if os.path.exists(self.sent_jobs_file):
+        if os.path.exists(self.sent_jobs_file) and os.stat(self.sent_jobs_file).st_size > 0:
             try:
                 with open(self.sent_jobs_file, 'r') as f:
                     existing_data = json.load(f)
             except json.JSONDecodeError:
-                print("JSON file loading failed while storing ")
-                pass
+                print(f"Warning: {self.sent_jobs_file} was corrupt. Starting fresh.")
+                existing_data = []
 
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         for msg in sent_data:
@@ -77,13 +77,19 @@ class PushMsg:
                 
                 try:
                     message_box.click()
-                    message_box.send_keys(formatted_text)
-                    time.sleep(1)
-                    message_box.send_keys(Keys.ENTER)
+                    lines = formatted_text.split('\n')
+                    for i, line in enumerate(lines):
+                        message_box.send_keys(line)
+                        if i < len(lines) - 1:
+                            message_box.send_keys(Keys.SHIFT, Keys.ENTER) #newline
+                    
+                    time.sleep(0.5)
+                    message_box.send_keys(Keys.ENTER) #send
                     time.sleep(1)
                     
                     sent_batch.append(msg_data)
                     print(f"Sent job: {msg_data.get('role_title')}")
+                    
                 except Exception as e:
                     print(f"Failed to send a message: {e}")
                     message_box = self.driver.find_element(By.XPATH, message_box_xpath)

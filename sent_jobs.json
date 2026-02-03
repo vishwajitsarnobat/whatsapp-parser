@@ -1,0 +1,12 @@
+[
+    {
+        "links": [
+            "https://www.linkedin.com/posts/jhalaktiwarii_hello-everyone-we-are-looking-for-full-activity-7418604665195421696-jSN6?utm_source=social_share_send&utm_medium=android_app&rcm=ACoAADycfrABRlBqNYJY_zajd60RnmIXFeTtNDE&utm_campaign=whatsapp"
+        ],
+        "role_title": "Full Stack Developer",
+        "is_remote": false,
+        "is_paid": false,
+        "match_reason": "Role 'Full Stack Developers' matches Software/Tech criteria. Remote and Paid status are not explicitly mentioned in the job description, making them ambiguous. Defaulting to 'false' for these criteria, but this is an assumption due to lack of explicit information.",
+        "sent_at": "2026-02-03 08:51:36"
+    }
+]
